@@ -120,6 +120,10 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 				item.setChecked(!item.isChecked());
 				mScannerViewModel.filterByDistance(item.isChecked());
 				return true;
+			case R.id.waypoint_dumps:
+				final Intent intent = new Intent(this,WayPointActivity.class);
+				startActivity(intent);
+				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -129,8 +133,8 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 		/*final Intent controlBlinkIntent = new Intent(this, BlinkyActivity.class);
 		controlBlinkIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
 		startActivity(controlBlinkIntent);*/
-		final Intent intent = new Intent(this,WayPointActivity.class);
-		intent.putExtra(WayPointActivity.EXTRA_DEVICE,device);
+		final Intent intent = new Intent(this,BLEActivity.class);
+		intent.putExtra(BLEActivity.EXTRA_DEVICE,device);
 		startActivity(intent);
 	}
 
@@ -176,7 +180,7 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 
 	/*@OnClick(R.id.wayPointCaptureButton)
 	public void onWayPointGeneration(){
-		final Intent intent = new Intent(this,WayPointActivity.class);
+		final Intent intent = new Intent(this,BLEActivity.class);
 		startActivity(intent);
 	}*/
 

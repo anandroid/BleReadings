@@ -53,6 +53,10 @@ public class DiscoveredBluetoothDevice implements Parcelable {
 		return name;
 	}
 
+	public void setName(String name){
+		this.name = name;
+	}
+
 	public int getRssi() {
 		return rssi;
 	}

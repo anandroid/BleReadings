@@ -29,6 +29,7 @@
 	<string name="menu_filter">Filter</string>
 	<string name="menu_filter_uuid">Only devices advertising LBS UUID</string>
 	<string name="menu_filter_nearby">Only nearby devices</string>
+	<string name="menu_waypoint_collection">Collect WayPoints Data</string>
 
 	<string name="unknown_device">Unknown Device</string>
 	<string name="turn_on">On</string>

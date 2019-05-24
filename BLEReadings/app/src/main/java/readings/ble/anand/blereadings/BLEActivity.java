@@ -1,95 +1,129 @@
 package readings.ble.anand.blereadings;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProviders;
 import readings.ble.anand.blereadings.adapter.DiscoveredBluetoothDevice;
+import readings.ble.anand.blereadings.objects.ReadingAndTime;
 import readings.ble.anand.blereadings.utils.StoreBleResultInFile;
 import readings.ble.anand.blereadings.utils.Utils;
 import readings.ble.anand.blereadings.viewmodels.DevicesLiveData;
 import readings.ble.anand.blereadings.viewmodels.ScannerStateLiveData;
 import readings.ble.anand.blereadings.viewmodels.ScannerViewModel;
 
+public class BLEActivity extends AppCompatActivity {
 
-public class WayPointActivity extends AppCompatActivity {
+    public static final String EXTRA_DEVICE = "readings.ble.anand.blereadings.EXTRA_DEVICE";
 
-    private TextView currentWayPoinStatusTextView,resultTextView;
-    private Button currentWayPointStatusButton;
+
+    private TextView resultTextView;
+    private TextView currentReadingTextView;
 
     private ScannerViewModel mScannerViewModel;
     private Runnable dataCollectorRunnable;
     private Handler dataCollectorHandler;
     private Map<String,List<Integer>> bleHistoryMap =  new HashMap<>();
+    private List<ReadingAndTime> bleHistoryList = new ArrayList<>();
     private int currentWayPointIndex = 1;
 
-    final int DATA_COLLECION_SIZE_FOR_EACH_WAYPOINT = 100 ;
+    final int DATA_COLLECION_SIZE_FOR_EACH_WAYPOINT = 10000 ;
     final int DATA_COLLECTION_INTERVAL_IN_MS = 300;
+    DiscoveredBluetoothDevice device;
+
 
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_waypoint);
+        setContentView(R.layout.activity_ble);
 
-        currentWayPoinStatusTextView = (TextView)findViewById(R.id.current_way_point_status);
-        currentWayPointStatusButton = (Button) findViewById(R.id.current_way_point_status_button);
+        final Intent intent = getIntent();
+        device = intent.getParcelableExtra(EXTRA_DEVICE);
+        String deviceName = device.getName();
+        String deviceAddress = device.getAddress();
+
+        final Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.white));
+        setSupportActionBar(toolbar);
+        if(!(deviceName!=null && deviceName.trim().length()>1)){
+            deviceName = "BLE";
+        }
+        getSupportActionBar().setTitle(deviceName);
+        getSupportActionBar().setSubtitle(deviceAddress);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
         resultTextView = (TextView)findViewById(R.id.resultTextView);
-        currentWayPointStatusButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                handleIHaveMoved();
-            }
-        });
+        currentReadingTextView = (TextView)findViewById(R.id.currentReadingReaTextView);
+
 
         mScannerViewModel = ViewModelProviders.of(this).get(ScannerViewModel.class);
         //mScannerViewModel.getScannerState().observe(this, this::startScan);
 
         bleHistoryMap = new HashMap<>();
+
+        handleIHaveMoved();
     }
 
-    private void setCurrentWayPoinStatusText(int currentWayPointIndex){
-        currentWayPoinStatusTextView.setText("Move to WayPoint : "+String.valueOf(currentWayPointIndex));
-        currentWayPointStatusButton.setVisibility(View.VISIBLE);
-        resultTextView.setVisibility(View.INVISIBLE);
-        Log.d("Here","Text Changed");
-    }
+
 
     private void handleIHaveMoved(){
         clear();
-        currentWayPointStatusButton.setVisibility(View.INVISIBLE);
         resultTextView.setVisibility(View.VISIBLE);
-        currentWayPoinStatusTextView.setText("Collecting Data for WayPoint : "+String.valueOf(currentWayPointIndex));
         mScannerViewModel.startScan();
         getData(DATA_COLLECION_SIZE_FOR_EACH_WAYPOINT);
         mScannerViewModel.getScannerState().observe(this, this::startScan);
     }
 
+    String stringConstructor ="";
+    int previousStringConstructorIndex=0;
+
     private void populateDataOnText(){
 
-        String stringConstructor ="";
+        int lastReading=0;
 
-        for (String deviceName : bleHistoryMap.keySet()){
-             List<Integer> historyList = bleHistoryMap.get(deviceName);
-             int rssiPower  = historyList.get(historyList.size()-1);
-             stringConstructor = stringConstructor+" "+deviceName+"  :  "+String.valueOf(rssiPower);
-             stringConstructor = stringConstructor+"\n";
+        while (previousStringConstructorIndex<bleHistoryList.size()){
+            ReadingAndTime readingAndTime = bleHistoryList.get(previousStringConstructorIndex);
+            String tempstringConstructor= readingAndTime.time+"  :  "+readingAndTime.reading+" dB"+"\n";
+            stringConstructor=tempstringConstructor+stringConstructor;
+            previousStringConstructorIndex++;
+            lastReading = readingAndTime.reading;
         }
         resultTextView.setText(stringConstructor);
+        if(lastReading!=0) {
+            currentReadingTextView.setText(lastReading + " dB");
+        } else {
+            currentReadingTextView.setText("");
+        }
+    }
+
+    public String  getCurrentTimeUsingCalendar() {
+        Calendar cal = Calendar.getInstance();
+        Date date=cal.getTime();
+        DateFormat dateFormat = new SimpleDateFormat("mm:ss");
+        String formattedDate=dateFormat.format(date);
+        return formattedDate;
     }
 
 
     int index = 0;
+    long previousTimeStampNanos=0;
     private void getData(final int dataCollectionSize) {
 
         index = 0 ;
@@ -107,9 +141,11 @@ public class WayPointActivity extends AppCompatActivity {
                     if (devicesLiveData != null && devicesLiveData.getValue() != null) {
                         for (DiscoveredBluetoothDevice device : devicesLiveData.getValue()) {
 
-                            if(device.getName()==null || device.getName().equalsIgnoreCase("null")
-                                    || device.getName().trim().length()==0){
-                                device.setName(device.getAddress());
+                            if(device.getAddress().equals(BLEActivity.this.device.getAddress())){
+                                if(device.getScanResult().getTimestampNanos()!=previousTimeStampNanos) {
+                                    bleHistoryList.add(new ReadingAndTime(getCurrentTimeUsingCalendar(), device.getRssi()));
+                                }
+                                previousTimeStampNanos = device.getScanResult().getTimestampNanos();
                             }
 
                             if (!bleHistoryMap.containsKey(device.getName())) {
@@ -128,7 +164,6 @@ public class WayPointActivity extends AppCompatActivity {
                     dataCollectorHandler.postDelayed(this, DATA_COLLECTION_INTERVAL_IN_MS);
                 } else {
                     StoreBleResultInFile.store(getApplicationContext(),currentWayPointIndex,bleHistoryMap);
-                    setCurrentWayPoinStatusText(++currentWayPointIndex);
                     stopScan();
                 }
                 index++;

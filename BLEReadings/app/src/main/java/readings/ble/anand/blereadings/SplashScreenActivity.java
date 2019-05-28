@@ -27,6 +27,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
+
+//Splash Screen Activity
+
 public class SplashScreenActivity extends Activity {
 	private static final int DURATION = 1000;
 
@@ -35,6 +38,7 @@ public class SplashScreenActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash_screen);
 
+		//Start the scanning Activity
 		new Handler().postDelayed(() -> {
 			final Intent intent = new Intent(this, ScannerActivity.class);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

@@ -12,13 +12,15 @@ import java.util.Map;
 
 public class StoreBleResultInFile {
 
+    //We will store the ble logs in the file
     public static void store(Context context, int wayPointIndex , Map<String,List<Integer>> bleHistoryMap){
 
-        String mainStringConstructor = "{";
 
+        //constructor a writable string from the map
+
+        String mainStringConstructor = "{";
         int index = 0;
         while(true) {
-
 
             boolean limitOverForADevice = false;
 
@@ -47,18 +49,15 @@ public class StoreBleResultInFile {
             }
             mainStringConstructor = mainStringConstructor+",";
 
-
-
             index++;
         }
 
-        Log.d("Here","Writing to File");
 
         writeToFile("WayPoint_"+String.valueOf(wayPointIndex)+".json",mainStringConstructor,context);
 
-        Log.d("Here","written Done");
     }
 
+    //Writes to local file
     private static void writeToFile(String fileName,String data,Context context) {
         try{
            // File path = context.getFilesDir();

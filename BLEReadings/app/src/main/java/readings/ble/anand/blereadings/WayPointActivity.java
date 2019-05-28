@@ -76,9 +76,7 @@ public class WayPointActivity extends AppCompatActivity {
     }
 
     private void populateDataOnText(){
-
         String stringConstructor ="";
-
         for (String deviceName : bleHistoryMap.keySet()){
              List<Integer> historyList = bleHistoryMap.get(deviceName);
              int rssiPower  = historyList.get(historyList.size()-1);
@@ -147,42 +145,36 @@ public class WayPointActivity extends AppCompatActivity {
         // First, check the Location permission. This is required on Marshmallow onwards in order
         // to scan for Bluetooth LE devices.
         if (Utils.isLocationPermissionsGranted(this)) {
-
             // Bluetooth must be enabled
             if (state.isBluetoothEnabled()) {
-
                 // We are now OK to start scanning
-
-
                 if (!state.hasRecords()) {
 
                 } else {
 
                 }
             } else {
-
                 clear();
             }
         } else {
-
-
             final boolean deniedForever = Utils.isLocationPermissionDeniedForever(this);
-
         }
     }
 
+    //Handle onRestart of Activity
     @Override
     protected void onRestart() {
         super.onRestart();
         clear();
     }
 
+
+    //Handle onStop of Activity
     @Override
     protected void onStop() {
         super.onStop();
         stopScan();
     }
-
 
     /**
      * stop scanning for bluetooth devices.

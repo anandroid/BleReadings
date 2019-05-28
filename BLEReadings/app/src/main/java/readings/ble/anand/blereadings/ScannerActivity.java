@@ -57,6 +57,7 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 
 	private ScannerViewModel mScannerViewModel;
 
+	//UI Elements
 	@BindView(R.id.state_scanning) View mScanningView;
 	@BindView(R.id.no_devices)View mEmptyView;
 	@BindView(R.id.no_location_permission) View mNoLocationPermissionView;
@@ -71,9 +72,8 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 		setContentView(R.layout.activity_scanner);
 		ButterKnife.bind(this);
 
-		final Toolbar toolbar = findViewById(R.id.toolbar);
-		setSupportActionBar(toolbar);
-		getSupportActionBar().setTitle(R.string.app_name);
+		//setup toolbar
+		setUpToolBar();
 
 		// Create view model containing utility methods for scanning
 		mScannerViewModel = ViewModelProviders.of(this).get(ScannerViewModel.class);
@@ -89,18 +89,28 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 		recyclerView.setAdapter(adapter);
 	}
 
+	//this function setsup the toolbar
+	private void setUpToolBar(){
+		final Toolbar toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		getSupportActionBar().setTitle(R.string.app_name);
+	}
+
+	//Handle onRestart of Activity
 	@Override
 	protected void onRestart() {
 		super.onRestart();
 		clear();
 	}
 
+	//Handle onStop of Activity
 	@Override
 	protected void onStop() {
 		super.onStop();
 		stopScan();
 	}
 
+	//Initiliaze toolbar options
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		getMenuInflater().inflate(R.menu.filter, menu);
@@ -109,6 +119,8 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 		return true;
 	}
 
+
+	//Handle toolbar selections
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		switch (item.getItemId()) {
@@ -128,16 +140,16 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 		return super.onOptionsItemSelected(item);
 	}
 
+
 	@Override
 	public void onItemClick(@NonNull final DiscoveredBluetoothDevice device) {
-		/*final Intent controlBlinkIntent = new Intent(this, BlinkyActivity.class);
-		controlBlinkIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
-		startActivity(controlBlinkIntent);*/
+		// Start the BLE Activity to log readings of a BLE
 		final Intent intent = new Intent(this,BLEActivity.class);
 		intent.putExtra(BLEActivity.EXTRA_DEVICE,device);
 		startActivity(intent);
 	}
 
+    //After user taking permissions action
 	@Override
 	public void onRequestPermissionsResult(final int requestCode,
 										   @NonNull final String[] permissions,
@@ -150,18 +162,21 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 		}
 	}
 
+	//On clicking going to  location permission
 	@OnClick(R.id.action_enable_location)
 	public void onEnableLocationClicked() {
 		final Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
 		startActivity(intent);
 	}
 
+    //On clicking going to  bluetooth permission
 	@OnClick(R.id.action_enable_bluetooth)
 	public void onEnableBluetoothClicked() {
 		final Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 		startActivity(enableIntent);
 	}
 
+	//On clicking giving location permission
 	@OnClick(R.id.action_grant_location_permission)
 	public void onGrantLocationPermissionClicked() {
 		Utils.markLocationPermissionRequested(this);
@@ -171,18 +186,13 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 				REQUEST_ACCESS_COARSE_LOCATION);
 	}
 
+	//On clicking go to permissions page
 	@OnClick(R.id.action_permission_settings)
 	public void onPermissionSettingsClicked() {
 		final Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
 		intent.setData(Uri.fromParts("package", getPackageName(), null));
 		startActivity(intent);
 	}
-
-	/*@OnClick(R.id.wayPointCaptureButton)
-	public void onWayPointGeneration(){
-		final Intent intent = new Intent(this,BLEActivity.class);
-		startActivity(intent);
-	}*/
 
 	/**
 	 * Start scanning for Bluetooth devices or displays a message based on the scanner state.
@@ -219,6 +229,8 @@ public class ScannerActivity extends AppCompatActivity implements DevicesAdapter
 				clear();
 			}
 		} else {
+			//if permissions were not given , prompt user for permissions
+
 			mNoLocationPermissionView.setVisibility(View.VISIBLE);
 			mNoBluetoothView.setVisibility(View.GONE);
 			mScanningView.setVisibility(View.INVISIBLE);
